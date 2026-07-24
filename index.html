@@ -1,0 +1,1691 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>RetireWise - Retirement Corpus Simulator</title>
+  <meta name="description"
+    content="Simulate how long your retirement corpus lasts. Live calculations, year-by-year breakdown, and interactive charts." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap"
+    rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #070714;
+      --card: rgba(255, 255, 255, .038);
+      --card2: rgba(255, 255, 255, .055);
+      --border: rgba(255, 255, 255, .08);
+      --border2: rgba(255, 255, 255, .04);
+      --text: #eeecff;
+      --text2: #8c8aae;
+      --text3: #4e4c6a;
+      --accent: #7c3aed;
+      --grad: linear-gradient(135deg, #7c3aed, #3b82f6);
+      --green: #10b981;
+      --green-bg: rgba(16, 185, 129, .10);
+      --green-bdr: rgba(16, 185, 129, .22);
+      --amber: #f59e0b;
+      --amber-bg: rgba(245, 158, 11, .10);
+      --amber-bdr: rgba(245, 158, 11, .22);
+      --red: #ef4444;
+      --red-bg: rgba(239, 68, 68, .10);
+      --red-bdr: rgba(239, 68, 68, .22);
+      --r: 12px;
+      --rsm: 8px;
+      --rlg: 18px;
+      --t: .18s ease;
+      --max: 1320px;
+      --lp: 300px;
+      --hh: 56px;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* orbs */
+    .orbs {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .orbs::before {
+      content: '';
+      position: absolute;
+      width: 700px;
+      height: 700px;
+      background: radial-gradient(circle, rgba(124, 58, 237, .11) 0%, transparent 65%);
+      top: -180px;
+      left: -180px;
+      animation: fA 26s ease-in-out infinite;
+    }
+
+    .orbs::after {
+      content: '';
+      position: absolute;
+      width: 550px;
+      height: 550px;
+      background: radial-gradient(circle, rgba(59, 130, 246, .08) 0%, transparent 65%);
+      bottom: 0;
+      right: -80px;
+      animation: fB 32s ease-in-out infinite;
+    }
+
+    @keyframes fA {
+
+      0%,
+      100% {
+        transform: translate(0, 0);
+      }
+
+      50% {
+        transform: translate(35px, 28px);
+      }
+    }
+
+    @keyframes fB {
+
+      0%,
+      100% {
+        transform: translate(0, 0);
+      }
+
+      50% {
+        transform: translate(-35px, -22px);
+      }
+    }
+
+    .wrap {
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 0 22px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ===HEADER=== */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      height: var(--hh);
+      background: rgba(7, 7, 20, .92);
+      backdrop-filter: blur(22px);
+      -webkit-backdrop-filter: blur(22px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .hdr {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 100%;
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 0 22px;
+      gap: 16px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      flex-shrink: 0;
+    }
+
+    .logo-ic {
+      width: 30px;
+      height: 30px;
+      background: var(--grad);
+      border-radius: var(--rsm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    .logo-nm {
+      font-size: 16px;
+      font-weight: 800;
+      background: var(--grad);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hdr-mid {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex: 1;
+      justify-content: center;
+    }
+
+    .hpill {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .hpdot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .hpdot.v {
+      background: #a78bfa;
+    }
+
+    .hpdot.g {
+      background: var(--green);
+    }
+
+    .hpdot.r {
+      background: var(--red);
+    }
+
+    .hpval {
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .hplbl {
+      color: var(--text3);
+      font-size: 11px;
+    }
+
+    .hdr-nav {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .hn {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text2);
+      padding: 5px 12px;
+      border-radius: var(--rsm);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--t);
+      font-family: inherit;
+    }
+
+    .hn:hover {
+      border-color: var(--accent);
+      color: var(--text);
+    }
+
+    /* ===COMPACT HERO=== */
+    .hero {
+      padding: 48px 0 36px;
+      position: relative;
+      z-index: 1;
+      text-align: center;
+    }
+
+    .hero-inner {
+      max-width: 580px;
+      margin: 0 auto;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(124, 58, 237, .11);
+      border: 1px solid rgba(124, 58, 237, .22);
+      color: #a78bfa;
+      padding: 3px 12px;
+      border-radius: 100px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .hero h1 {
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      font-weight: 900;
+      line-height: 1.06;
+      margin-bottom: 10px;
+      background: linear-gradient(130deg, #fff 0%, #c4b5fd 42%, #93c5fd 85%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -.5px;
+    }
+
+    .hero p {
+      font-size: 14px;
+      color: var(--text2);
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    .cta-outline {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: rgba(255, 255, 255, .05);
+      border: 1px solid var(--border);
+      color: var(--text2);
+      padding: 11px 20px;
+      border-radius: 100px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: var(--t);
+    }
+
+    .cta-outline:hover {
+      border-color: var(--accent);
+      color: var(--text);
+      background: rgba(124, 58, 237, .07);
+    }
+
+    /* ===PLAN STRIP=== */
+    .plan-strip {
+      margin-bottom: 22px;
+    }
+
+    .ps-head {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .ps-head h2 {
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .ps-head p {
+      font-size: 11px;
+      color: var(--text2);
+    }
+
+    .plans-scroll {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255, 255, 255, .07) transparent;
+    }
+
+    .plans-scroll::-webkit-scrollbar {
+      height: 3px;
+    }
+
+    .plans-scroll::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, .09);
+      border-radius: 100px;
+    }
+
+    .plan-card {
+      flex: 0 0 185px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 14px;
+      cursor: pointer;
+      scroll-snap-align: start;
+      transition: transform .2s ease, border-color .2s, box-shadow .2s;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .plan-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--pc, var(--grad));
+    }
+
+    .plan-card:hover {
+      border-color: var(--pc, rgba(124, 58, 237, .4));
+      transform: translateY(-3px);
+      box-shadow: 0 14px 36px rgba(0, 0, 0, .4);
+    }
+
+    .plan-card.sel {
+      border-color: var(--pc, var(--accent));
+      background: var(--card2);
+    }
+
+    .pc-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+    }
+
+    .pc-icon {
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    .pc-dur {
+      font-size: 9px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 100px;
+      background: rgba(255, 255, 255, .06);
+      color: var(--text2);
+      border: 1px solid var(--border);
+    }
+
+    .pc-name {
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .pc-tag {
+      font-size: 10px;
+      color: var(--text3);
+      line-height: 1.3;
+    }
+
+    .pc-divider {
+      border: none;
+      border-top: 1px solid var(--border2);
+    }
+
+    .pc-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 3px;
+    }
+
+    .pc-stat {
+      text-align: center;
+      padding: 5px 2px;
+      background: rgba(255, 255, 255, .02);
+      border-radius: 5px;
+    }
+
+    .pcs-val {
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .pcs-lbl {
+      font-size: 8px;
+      text-transform: uppercase;
+      letter-spacing: .3px;
+      color: var(--text3);
+    }
+
+    .pc-btn {
+      width: 100%;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text2);
+      padding: 6px;
+      border-radius: var(--rsm);
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--t);
+      font-family: inherit;
+    }
+
+    .plan-card:hover .pc-btn,
+    .plan-card.sel .pc-btn {
+      background: var(--pc, var(--accent));
+      border-color: transparent;
+      color: #fff;
+    }
+
+    /* ===MAIN GRID=== */
+    .main-grid {
+      display: grid;
+      grid-template-columns: var(--lp) 1fr;
+      gap: 20px;
+      align-items: start;
+      margin-bottom: 60px;
+    }
+
+    /* ===LEFT PANEL (inputs)=== */
+    .left-panel {
+      position: sticky;
+      top: calc(var(--hh) + 10px);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--rlg);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      max-height: calc(100vh - var(--hh) - 20px);
+    }
+
+    .lp-hdr {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      background: rgba(255, 255, 255, .02);
+    }
+
+    .lp-title {
+      font-size: 12px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .live-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: pulse 1.8s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, .4);
+      }
+
+      60% {
+        opacity: .6;
+        box-shadow: 0 0 0 4px rgba(16, 185, 129, 0);
+      }
+    }
+
+    .lp-reset {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text3);
+      padding: 4px 9px;
+      border-radius: var(--rsm);
+      font-size: 10px;
+      cursor: pointer;
+      transition: var(--t);
+      font-family: inherit;
+    }
+
+    .lp-reset:hover {
+      border-color: var(--accent);
+      color: var(--text2);
+    }
+
+    .lp-body {
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .lp-body::-webkit-scrollbar {
+      width: 2px;
+    }
+
+    .lp-body::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, .08);
+      border-radius: 100px;
+    }
+
+    .inp-item {
+      padding: 11px 16px;
+      border-bottom: 1px solid var(--border2);
+    }
+
+    .inp-item:last-child {
+      border-bottom: none;
+    }
+
+    .ii-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 5px;
+    }
+
+    .ii-lbl {
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--text2);
+      text-transform: uppercase;
+      letter-spacing: .7px;
+    }
+
+    .ii-val {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--text);
+      letter-spacing: -.4px;
+      transition: color .15s;
+    }
+
+    .ii-val.flash {
+      animation: flashVal .25s ease-out;
+    }
+
+    @keyframes flashVal {
+      0% {
+        opacity: .4;
+        transform: scale(.95);
+      }
+
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 3px;
+      background: rgba(255, 255, 255, .1);
+      border-radius: 100px;
+      outline: none;
+      cursor: pointer;
+      display: block;
+      margin: 3px 0 7px;
+    }
+
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 15px;
+      height: 15px;
+      background: var(--grad);
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 0 0 3px rgba(124, 58, 237, .2);
+      transition: box-shadow .15s;
+    }
+
+    input[type=range]:hover::-webkit-slider-thumb {
+      box-shadow: 0 0 0 6px rgba(124, 58, 237, .18);
+    }
+
+    input[type=range]::-moz-range-thumb {
+      width: 15px;
+      height: 15px;
+      background: #7c3aed;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    input[type=number] {
+      width: 100%;
+      background: rgba(255, 255, 255, .05);
+      border: 1px solid var(--border);
+      border-radius: var(--rsm);
+      color: var(--text);
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      outline: none;
+      transition: border-color .15s;
+      font-family: inherit;
+    }
+
+    input[type=number]:focus {
+      border-color: var(--accent);
+      background: rgba(124, 58, 237, .07);
+    }
+
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+      display: none;
+    }
+
+    .lp-footer {
+      flex-shrink: 0;
+      padding: 9px 16px;
+      border-top: 1px solid var(--border);
+      background: rgba(255, 255, 255, .015);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 38px;
+    }
+
+    .lp-fd {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      background: var(--text3);
+      transition: background .3s;
+    }
+
+    .lp-fn {
+      font-size: 10px;
+      color: var(--text2);
+      font-weight: 500;
+    }
+
+    /* ===RIGHT PANEL=== */
+    .right-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      min-width: 0;
+    }
+
+    /* ===STAT CARDS=== */
+    .sg {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+    }
+
+    .sc {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 14px;
+      transition: transform .2s, box-shadow .2s;
+    }
+
+    .sc:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, .3);
+    }
+
+    .sc.g {
+      border-color: var(--green-bdr);
+    }
+
+    .sc.a {
+      border-color: var(--amber-bdr);
+    }
+
+    .sc.v {
+      border-color: rgba(124, 58, 237, .25);
+    }
+
+    .sc-top {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-bottom: 8px;
+    }
+
+    .sc-ic {
+      width: 28px;
+      height: 28px;
+      border-radius: var(--rsm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      flex-shrink: 0;
+    }
+
+    .sc.g .sc-ic {
+      background: var(--green-bg);
+    }
+
+    .sc.a .sc-ic {
+      background: var(--amber-bg);
+    }
+
+    .sc.v .sc-ic {
+      background: rgba(124, 58, 237, .12);
+    }
+
+    .sc-lbl {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text2);
+    }
+
+    .sc-val {
+      font-size: clamp(1.1rem, 1.8vw, 1.5rem);
+      font-weight: 800;
+      letter-spacing: -.3px;
+      transition: all .2s;
+    }
+
+    .sc-sub {
+      font-size: 10px;
+      color: var(--text3);
+      margin-top: 2px;
+    }
+
+    /* ===CHART=== */
+    .cc {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--rlg);
+      padding: 20px;
+    }
+
+    .ch {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .ch h3 {
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .ch p {
+      font-size: 11px;
+      color: var(--text2);
+    }
+
+    .cw {
+      position: relative;
+      height: 300px;
+    }
+
+    .cl {
+      display: flex;
+      gap: 14px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+
+    .cli {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 10px;
+      color: var(--text2);
+    }
+
+    .cld {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* ===TABLE=== */
+    .tbc {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--rlg);
+      overflow: hidden;
+    }
+
+    .tbl-ctrl {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+
+    .flbl {
+      font-size: 10px;
+      color: var(--text2);
+      font-weight: 600;
+    }
+
+    .fbtn {
+      background: rgba(255, 255, 255, .03);
+      border: 1px solid var(--border);
+      color: var(--text2);
+      padding: 4px 11px;
+      border-radius: 100px;
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--t);
+      font-family: inherit;
+    }
+
+    .fbtn:hover,
+    .fbtn.act {
+      border-color: var(--accent);
+      color: #a78bfa;
+      background: rgba(124, 58, 237, .09);
+    }
+
+    .tbw {
+      overflow-x: auto;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .tbw::-webkit-scrollbar {
+      width: 3px;
+      height: 3px;
+    }
+
+    .tbw::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, .08);
+      border-radius: 100px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      min-width: 600px;
+    }
+
+    thead {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: rgba(6, 6, 20, .97);
+      backdrop-filter: blur(12px);
+    }
+
+    th {
+      text-align: left;
+      padding: 9px 14px;
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 8px 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, .025);
+      white-space: nowrap;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr.phg:hover td {
+      background: rgba(16, 185, 129, .04);
+    }
+
+    tr.phd:hover td {
+      background: rgba(245, 158, 11, .04);
+    }
+
+    .bdg {
+      display: inline-flex;
+      padding: 2px 7px;
+      border-radius: 100px;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .3px;
+    }
+
+    .bdg.g {
+      background: var(--green-bg);
+      color: var(--green);
+      border: 1px solid var(--green-bdr);
+    }
+
+    .bdg.a {
+      background: var(--amber-bg);
+      color: var(--amber);
+      border: 1px solid var(--amber-bdr);
+    }
+
+    .bdg.r {
+      background: var(--red-bg);
+      color: var(--red);
+      border: 1px solid var(--red-bdr);
+    }
+
+    .cp {
+      color: var(--green);
+      font-weight: 700;
+    }
+
+    .cn {
+      color: var(--red);
+      font-weight: 700;
+    }
+
+    .cd {
+      color: var(--text3);
+    }
+
+    /* ===CTA BUTTON=== */
+    .hero-cta {
+      margin-top: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .cta-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--grad);
+      border: none;
+      color: #fff;
+      padding: 11px 24px;
+      border-radius: 100px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      box-shadow: 0 6px 24px rgba(124, 58, 237, .38);
+      transition: all .25s ease;
+      letter-spacing: -.2px;
+    }
+
+    .cta-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 32px rgba(124, 58, 237, .5);
+    }
+
+    .cta-btn svg {
+      transition: transform .25s;
+    }
+
+    .cta-btn:hover svg {
+      transform: translateX(3px);
+    }
+
+    .cta-hint {
+      font-size: 11px;
+      color: var(--text3);
+    }
+
+    /* ===EXHAUSTION BANNER=== */
+    .exh-banner {
+      border-radius: var(--r);
+      padding: 16px 20px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      border: 1px solid;
+      transition: all .4s ease;
+    }
+
+    .exh-banner.danger {
+      background: linear-gradient(135deg, rgba(239, 68, 68, .14), rgba(239, 68, 68, .06));
+      border-color: rgba(239, 68, 68, .35);
+    }
+
+    .exh-banner.safe {
+      background: linear-gradient(135deg, rgba(16, 185, 129, .12), rgba(16, 185, 129, .05));
+      border-color: rgba(16, 185, 129, .3);
+    }
+
+    .exh-ico {
+      font-size: 28px;
+      flex-shrink: 0;
+      line-height: 1;
+      margin-top: 2px;
+    }
+
+    .exh-body {
+      flex: 1;
+    }
+
+    .exh-title {
+      font-size: 15px;
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 4px;
+    }
+
+    .exh-banner.danger .exh-title {
+      color: #fca5a5;
+    }
+
+    .exh-banner.safe .exh-title {
+      color: #6ee7b7;
+    }
+
+    .exh-detail {
+      font-size: 12px;
+      color: var(--text2);
+      line-height: 1.5;
+    }
+
+    .exh-year {
+      font-size: clamp(1.6rem, 3vw, 2.2rem);
+      font-weight: 900;
+      letter-spacing: -.5px;
+      margin: 6px 0 4px;
+    }
+
+    .exh-banner.danger .exh-year {
+      color: #f87171;
+    }
+
+    .exh-banner.safe .exh-year {
+      color: #34d399;
+    }
+
+    /* ===FOOTER=== */
+    footer {
+      border-top: 1px solid var(--border2);
+      padding: 20px 22px;
+      text-align: center;
+      color: var(--text3);
+      font-size: 11px;
+      position: relative;
+      z-index: 1;
+    }
+
+    footer a {
+      color: var(--text2);
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      color: var(--text);
+    }
+
+    /* ===RESPONSIVE=== */
+    @media(max-width:960px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .left-panel {
+        position: static;
+        max-height: none;
+      }
+
+      .sg {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .hdr-mid {
+        display: none;
+      }
+    }
+
+    @media(max-width:640px) {
+      .wrap {
+        padding: 0 14px;
+      }
+
+      .hero {
+        padding: 28px 0 22px;
+      }
+
+      .sg {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .plan-card {
+        flex: 0 0 165px;
+      }
+
+      .hero-cta {
+        flex-direction: column;
+        align-items: center;
+      }
+    }
+
+    @media(max-width:420px) {
+      .sg {
+        grid-template-columns: 1fr;
+      }
+
+      .hdr-nav {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="orbs" aria-hidden="true"></div>
+
+  <!-- HEADER with live stats -->
+  <header>
+    <div class="hdr">
+      <a class="logo" href="#">
+        <div class="logo-ic">&#128176;</div><span class="logo-nm">RetireWise</span> by
+        <span class="logo-nm">Sachien</span>
+      </a>
+      <div class="hdr-mid">
+        <div class="hpill">
+          <div class="hpdot v"></div><span class="hpval" id="hh-dur">--</span>&thinsp;<span class="hplbl">yrs</span>
+        </div>
+        <div class="hpill">
+          <div class="hpdot g"></div><span class="hpval" id="hh-peak">--</span>&thinsp;<span class="hplbl">peak</span>
+        </div>
+        <div class="hpill">
+          <div class="hpdot r"></div><span class="hpval" id="hh-exh">--</span>&thinsp;<span
+            class="hplbl">exhaustion</span>
+        </div>
+      </div>
+      <nav class="hdr-nav">
+        <button class="hn" onclick="scrollToId('plan-strip')">Plans</button>
+        <button class="hn" onclick="scrollToId('main-grid')">Calculator</button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- COMPACT HERO -->
+  <section class="hero">
+    <div class="wrap">
+      <div class="hero-inner">
+        <div class="eyebrow">&#128202; Live Retirement Simulator</div>
+        <h1>Will Your Corpus Last a Lifetime?</h1>
+        <p>Enter your retirement details and discover exactly how long your savings will sustain you &mdash; year by
+          year.</p>
+        <div class="hero-cta" style="margin-top:20px;justify-content:center;">
+          <button class="cta-btn" onclick="scrollToId('main-grid')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
+            Start Calculating
+          </button>
+          <button class="cta-outline" onclick="scrollToId('plan-strip')">View Suggested Plans</button>
+        </div>
+        <p style="margin-top:10px;font-size:11px;color:var(--text3)">Adjust any input on the left &mdash; results update
+          instantly</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- PLAN STRIP -->
+  <div class="wrap" id="plan-strip">
+    <div class="plan-strip">
+      <div class="ps-head">
+        <h2>Suggested Plans</h2>
+        <p>Click any scenario to load it instantly &mdash; then tweak to your liking</p>
+      </div>
+      <div class="plans-scroll" id="plans-container"><!-- injected by JS --></div>
+    </div>
+  </div>
+
+  <!-- MAIN GRID -->
+  <div class="wrap" id="main-grid">
+    <div class="main-grid">
+
+      <!-- LEFT: Inputs -->
+      <aside class="left-panel">
+        <div class="lp-hdr">
+          <div class="lp-title">
+            <div class="live-dot"></div>Your Details
+          </div>
+          <button class="lp-reset" onclick="resetDef()">&#8635; Reset</button>
+        </div>
+        <div class="lp-body">
+          <div class="inp-item">
+            <div class="ii-top">
+              <div class="ii-lbl">Year of Retirement</div>
+              <div class="ii-val" id="dv-year">2031</div>
+            </div>
+            <input type="range" id="sl-year" min="2024" max="2070" value="2031" step="1" />
+            <input type="number" id="in-year" value="2031" min="2024" max="2100" step="1" />
+          </div>
+          <div class="inp-item">
+            <div class="ii-top">
+              <div class="ii-lbl">Retirement Corpus</div>
+              <div class="ii-val" id="dv-corpus">&#8377;2 Cr</div>
+            </div>
+            <input type="range" id="sl-corpus" min="1000000" max="100000000" value="20000000" step="500000" />
+            <input type="number" id="in-corpus" value="20000000" min="100000" max="2000000000" step="100000" />
+          </div>
+          <div class="inp-item">
+            <div class="ii-top">
+              <div class="ii-lbl">Monthly Pension</div>
+              <div class="ii-val" id="dv-pension">&#8377;50 K</div>
+            </div>
+            <input type="range" id="sl-pension" min="5000" max="1000000" value="50000" step="5000" />
+            <input type="number" id="in-pension" value="50000" min="1000" max="20000000" step="1000" />
+          </div>
+          <div class="inp-item">
+            <div class="ii-top">
+              <div class="ii-lbl">Expected Annual Return</div>
+              <div class="ii-val" id="dv-return">7.00%</div>
+            </div>
+            <input type="range" id="sl-return" min="0.5" max="25" value="7" step="0.5" />
+            <input type="number" id="in-return" value="7" min="0.5" max="25" step="0.5" />
+          </div>
+          <div class="inp-item">
+            <div class="ii-top">
+              <div class="ii-lbl">Return Reduction / yr</div>
+              <div class="ii-val" id="dv-reduce">0.25%</div>
+            </div>
+            <input type="range" id="sl-reduce" min="0" max="3" value="0.25" step="0.05" />
+            <input type="number" id="in-reduce" value="0.25" min="0" max="3" step="0.05" />
+          </div>
+          <div class="inp-item">
+            <div class="ii-top">
+              <div class="ii-lbl">Annual Pension Hike</div>
+              <div class="ii-val" id="dv-growth">4.0%</div>
+            </div>
+            <input type="range" id="sl-growth" min="0" max="20" value="4" step="0.5" />
+            <input type="number" id="in-growth" value="4" min="0" max="20" step="0.5" />
+          </div>
+        </div>
+        <div class="lp-footer">
+          <div class="lp-fd" id="lp-dot"></div>
+          <span class="lp-fn" id="lp-plan-text">Custom configuration</span>
+        </div>
+      </aside>
+
+      <!-- RIGHT: Results (always visible) -->
+      <div class="right-panel">
+        <!-- EXHAUSTION WARNING BANNER - most prominent element -->
+        <div class="exh-banner danger" id="exh-banner">
+          <div class="exh-ico" id="exh-ico">&#9888;&#65039;</div>
+          <div class="exh-body">
+            <div class="exh-title" id="exh-title">Your money will last only until</div>
+            <div class="exh-year" id="exh-year">--</div>
+            <div class="exh-detail" id="exh-detail">Calculating&hellip;</div>
+          </div>
+        </div>
+
+        <!-- 5 stat cards in a row -->
+        <div class="sg">
+          <div class="sc v">
+            <div class="sc-top">
+              <div class="sc-ic">&#9201;</div>
+              <div class="sc-lbl">Duration</div>
+            </div>
+            <div class="sc-val" id="sc-dur">--</div>
+            <div class="sc-sub" id="sc-until">--</div>
+          </div>
+          <div class="sc g">
+            <div class="sc-top">
+              <div class="sc-ic">&#127942;</div>
+              <div class="sc-lbl">Peak Corpus</div>
+            </div>
+            <div class="sc-val" id="sc-peak">--</div>
+            <div class="sc-sub" id="sc-peak-yr">--</div>
+          </div>
+          <div class="sc a">
+            <div class="sc-top">
+              <div class="sc-ic">&#128184;</div>
+              <div class="sc-lbl">Final Monthly</div>
+            </div>
+            <div class="sc-val" id="sc-pension">--</div>
+            <div class="sc-sub" id="sc-pension-yr">--</div>
+          </div>
+          <div class="sc" style="border-color:var(--green-bdr);">
+            <div class="sc-top">
+              <div class="sc-ic" style="background:var(--green-bg)">&#128994;</div>
+              <div class="sc-lbl">Growth Phase</div>
+            </div>
+            <div class="sc-val" id="ps-g">--</div>
+            <div class="sc-sub">years growing</div>
+          </div>
+          <div class="sc" style="border-color:var(--amber-bdr);">
+            <div class="sc-top">
+              <div class="sc-ic" style="background:var(--amber-bg)">&#128993;</div>
+              <div class="sc-lbl">Decline Phase</div>
+            </div>
+            <div class="sc-val" id="ps-d">--</div>
+            <div class="sc-sub">years shrinking</div>
+          </div>
+        </div>
+
+        <!-- Chart -->
+        <div class="cc">
+          <div class="ch">
+            <h3>Corpus Over Time</h3>
+            <p>Hover for year-by-year details</p>
+          </div>
+          <div class="cw"><canvas id="myChart" aria-label="Corpus over time" role="img"></canvas></div>
+          <div class="cl">
+            <div class="cli">
+              <div class="cld" style="background:#10b981"></div><span>Growth phase</span>
+            </div>
+            <div class="cli">
+              <div class="cld" style="background:#f59e0b"></div><span>Decline phase</span>
+            </div>
+            <div class="cli" style="color:var(--text3)"><span>&#8212; Chart ends when corpus is exhausted</span></div>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="tbc">
+          <div class="tbl-ctrl">
+            <span class="flbl">Filter:</span>
+            <button class="fbtn act" id="fb-all" onclick="filterTbl('all')">All</button>
+            <button class="fbtn" id="fb-growth" onclick="filterTbl('growth')">Growth</button>
+            <button class="fbtn" id="fb-decline" onclick="filterTbl('decline')">Decline</button>
+          </div>
+          <div class="tbw">
+            <table>
+              <thead>
+                <tr>
+                  <th>Year</th>
+                  <th>Phase</th>
+                  <th>Return %</th>
+                  <th>Monthly Pension</th>
+                  <th>Annual Withdrawn</th>
+                  <th>Interest Earned</th>
+                  <th>Corpus (Year Start)</th>
+                </tr>
+              </thead>
+              <tbody id="tb">
+                <tr>
+                  <td colspan="7" style="text-align:center;padding:36px;color:var(--text3)">Loading simulation&hellip;
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div><!-- /right-panel -->
+    </div><!-- /main-grid -->
+  </div><!-- /wrap -->
+
+  <footer>
+    <p>Built with &#10084;&#65039; &nbsp;|&nbsp; Originally created by <strong><a
+          href="https://www.instagram.com/sachien.k" target="_blank" rel="noopener">Sachien Khare</a></strong>
+      &nbsp;|&nbsp; <a href="https://docs.google.com/spreadsheets/d/18RttmDysOjhol7o0ymGniZ8mLMJEEY-UWv5vHdtjQvg/"
+        target="_blank" rel="noopener">View Original Sheet</a></p>
+    <p style="margin-top:4px">For educational purposes only &mdash; not financial advice.</p>
+  </footer>
+  <script>
+    'use strict';
+    var INR = '\u20b9';
+    /* ---- formatters ---- */
+    function fmtCr(n) { if (n === null || isNaN(n)) return '--'; var a = Math.abs(n), s = n < 0 ? '-' : ''; if (a >= 10000000) return s + INR + (a / 10000000).toFixed(2) + ' Cr'; if (a >= 100000) return s + INR + (a / 100000).toFixed(2) + ' L'; if (a >= 1000) return s + INR + (a / 1000).toFixed(1) + ' K'; return s + INR + a.toFixed(0); }
+    function fmtS(n) { if (n === null || isNaN(n)) return '--'; var a = Math.abs(n), s = n < 0 ? '-' : ''; if (a >= 10000000) return s + INR + (a / 10000000).toFixed(1) + ' Cr'; if (a >= 100000) return s + INR + (a / 100000).toFixed(1) + ' L'; if (a >= 1000) return s + INR + (a / 1000).toFixed(0) + ' K'; return s + INR + a.toFixed(0); }
+    function flash(id) { var el = document.getElementById(id); if (!el) return; el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); }
+
+    /* ---- simulation engine ---- */
+    function simulate(p) {
+      var ry = p.retirementYear, C0 = p.initialCorpus, rr = p.returnReduce, M0 = p.initialMonthly, pg = p.pensionGrowth;
+      var rows = [], MAX = 220, corpus = C0, rate = p.returnRate, monthly = M0;
+      for (var i = 0; i < MAX; i++) {
+        var year = ry + i, annual = monthly * 12, interest = (corpus - annual) * rate / 100, nextCorpus = corpus + interest - annual;
+        rows.push({ year: year, rate: +rate.toFixed(6), monthly: monthly, annual: annual, interest: interest, corpus: corpus, net: interest - annual });
+        corpus = nextCorpus; rate = rate * (1 - rr / 100); monthly = monthly * (1 + pg / 100);
+        if (corpus <= 0) break;
+      }
+      var peakC = -Infinity, peakIdx = 0;
+      for (var j = 0; j < rows.length; j++) { if (rows[j].corpus > peakC) { peakC = rows[j].corpus; peakIdx = j; } }
+      for (var k = 0; k < rows.length; k++) { var r = rows[k]; r.phase = r.net < 0 ? 'decline' : 'growth'; }
+      var lastPos = rows.length - 1;
+      var firstExh = corpus <= 0 ? ry + rows.length : null;
+      var gY = 0, dY = 0; rows.forEach(function (r) { if (r.phase === 'growth') gY++; else if (r.phase === 'decline') dY++; });
+      return { rows: rows, sum: { duration: rows.length, lastPosYear: rows[lastPos].year, firstExhYr: firstExh, peakCorpus: peakC, peakYear: rows[peakIdx].year, finalMonthly: rows[lastPos].monthly, growthYrs: gY, declineYrs: dY } };
+    }
+
+    /* ---- suggested plans ---- */
+    /* Plans: index 1 = Balanced Life = default values (matches DEFS below) */
+    var PLANS = [
+      { name: 'Salaried Middle', tag: 'Typical private sector', icon: '\u{1F4BC}', color: '#06b6d4', year: 2032, corpus: 8000000, returnRate: 7, returnReduce: 0.20, pension: 25000, pensionGrowth: 5 },
+      { name: 'Balanced Life', tag: 'Upper-middle class — Default', icon: '\u2696\uFE0F', color: '#7c3aed', year: 2031, corpus: 20000000, returnRate: 7, returnReduce: 0.25, pension: 50000, pensionGrowth: 4 },
+      { name: 'Senior Executive', tag: 'C-suite / senior manager', icon: '\u{1F4CA}', color: '#f59e0b', year: 2030, corpus: 50000000, returnRate: 8, returnReduce: 0.25, pension: 150000, pensionGrowth: 6 },
+      { name: 'Early FIRE', tag: 'Financial independence', icon: '\u26A1', color: '#ef4444', year: 2028, corpus: 75000000, returnRate: 8.5, returnReduce: 0.30, pension: 200000, pensionGrowth: 6 },
+      { name: 'HNI / Business', tag: 'High net worth individual', icon: '\u{1F451}', color: '#ec4899', year: 2027, corpus: 150000000, returnRate: 9, returnReduce: 0.20, pension: 400000, pensionGrowth: 5 },
+      { name: 'भ्रष्टाचारी', tag: 'Swiss bank account', icon: '\u{1F4B0}', color: '#eab308', year: 2024, corpus: 1000000000, returnRate: 15, returnReduce: 0, pension: 5000000, pensionGrowth: 12 }
+    ];
+
+    var selPlanIdx = -1;
+
+    function renderPlanCards() {
+      var c = document.getElementById('plans-container');
+      c.innerHTML = PLANS.map(function (plan, idx) {
+        return '<div class="plan-card" style="--pc:' + plan.color + '" onclick="applyPlan(' + idx + ')" id="pc-' + idx + '">'
+          + '<div class="pc-top"><span class="pc-icon">' + plan.icon + '</span></div>'
+          + '<div class="pc-name">' + plan.name + '</div>'
+          + '<div class="pc-tag">' + plan.tag + '</div>'
+          + '<hr class="pc-divider"/>'
+          + '<div class="pc-stats">'
+          + '<div class="pc-stat"><div class="pcs-val">' + fmtS(plan.corpus) + '</div><div class="pcs-lbl">Corpus</div></div>'
+          + '<div class="pc-stat"><div class="pcs-val">' + fmtCr(plan.pension) + '</div><div class="pcs-lbl">Monthly</div></div>'
+          + '<div class="pc-stat"><div class="pcs-val">' + plan.returnRate + '%</div><div class="pcs-lbl">Return</div></div>'
+          + '</div>'
+          + '<button class="pc-btn">Use Plan \u2192</button>'
+          + '</div>';
+      }).join('');
+    }
+
+    function applyPlan(idx) {
+      var p = PLANS[idx]; selPlanIdx = idx;
+      setInp('year', p.year); setInp('corpus', p.corpus); setInp('return', p.returnRate);
+      setInp('reduce', p.returnReduce); setInp('pension', p.pension); setInp('growth', p.pensionGrowth);
+      document.querySelectorAll('.plan-card').forEach(function (c, i) { c.classList.toggle('sel', i === idx); });
+      updatePlanTag(idx);
+      runSimulation();
+    }
+
+    function updatePlanTag(idx) {
+      var dot = document.getElementById('lp-dot');
+      var txt = document.getElementById('lp-plan-text');
+      if (idx >= 0) {
+        dot.style.background = PLANS[idx].color;
+        txt.textContent = PLANS[idx].name + ' plan loaded';
+      } else {
+        dot.style.background = '';
+        txt.textContent = 'Custom configuration';
+      }
+    }
+
+    /* ---- chart ---- */
+    var chart = null;
+    function renderChart(rows) {
+      var ctx = document.getElementById('myChart').getContext('2d');
+      if (chart) { chart.destroy(); chart = null; }
+      /* Clip at zero: negative corpus values make no sense on the chart */
+      var chartRows = rows.filter(function (r) { return r.corpus >= 0; });
+      /* Append a zero-cap point if corpus was exhausted, for clean visual end */
+      if (rows.length > chartRows.length) {
+        var last = chartRows[chartRows.length - 1];
+        chartRows = chartRows.concat([{ year: last.year + 1, corpus: 0, phase: 'decline', rate: last.rate, monthly: last.monthly, annual: last.annual, interest: 0, net: 0 }]);
+      }
+      var labels = chartRows.map(function (r) { return r.year; });
+      var data = chartRows.map(function (r) { return +(r.corpus / 10000000).toFixed(4); });
+      var ptC = chartRows.map(function (r) { return r.phase === 'decline' ? '#f59e0b' : '#10b981'; });
+      chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels, datasets: [{
+            data: data, borderWidth: 2.2,
+            pointRadius: chartRows.length > 80 ? 0 : 3, pointHoverRadius: 7,
+            pointBackgroundColor: ptC, pointBorderColor: 'transparent', tension: 0.36, fill: true,
+            backgroundColor: function (c2) { var ca = c2.chart.chartArea, cc = c2.chart.ctx; if (!ca) return 'rgba(124,58,237,.08)'; var g = cc.createLinearGradient(0, ca.top, 0, ca.bottom); g.addColorStop(0, 'rgba(124,58,237,.25)'); g.addColorStop(.6, 'rgba(59,130,246,.08)'); g.addColorStop(1, 'rgba(59,130,246,0)'); return g; },
+            segment: { borderColor: function (c2) { var r = chartRows[c2.p0DataIndex]; if (!r) return '#10b981'; return r.phase === 'decline' ? '#f59e0b' : '#10b981'; } }
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, animation: { duration: 400 },
+          plugins: {
+            legend: { display: false }, tooltip: {
+              backgroundColor: 'rgba(6,6,20,.97)', borderColor: 'rgba(255,255,255,.08)', borderWidth: 1, padding: 13, titleColor: '#eeecff', bodyColor: '#8c8aae', titleFont: { size: 12, weight: '700', family: 'Plus Jakarta Sans' }, bodyFont: { size: 11, family: 'Plus Jakarta Sans' },
+              callbacks: { title: function (i) { return 'Year ' + i[0].label; }, label: function (i) { var r = chartRows[i.dataIndex]; if (!r) return ''; return ['Corpus: ' + fmtCr(r.corpus), 'Phase: ' + r.phase, 'Return: ' + r.rate.toFixed(3) + '%', 'Monthly: ' + fmtCr(r.monthly), 'Interest: ' + fmtCr(r.interest)]; } }
+            }
+          },
+          scales: {
+            x: { grid: { color: 'rgba(255,255,255,.03)' }, ticks: { color: '#4e4c6a', font: { size: 10, family: 'Plus Jakarta Sans' }, maxTicksLimit: 12 }, border: { display: false } },
+            y: { min: 0, grid: { color: 'rgba(255,255,255,.03)' }, ticks: { color: '#4e4c6a', font: { size: 10, family: 'Plus Jakarta Sans' }, callback: function (v) { return v.toFixed(0) + ' Cr'; } }, border: { display: false } }
+          }
+        }
+      });
+    }
+
+    /* ---- table ---- */
+    var tblFilter = 'all', simRows = [];
+    function filterTbl(f) {
+      tblFilter = f;
+      ['all', 'growth', 'decline'].forEach(function (k) { document.getElementById('fb-' + k).classList.toggle('act', k === f); });
+      renderRows(simRows);
+    }
+    function renderRows(rows) {
+      var d = tblFilter === 'all' ? rows : rows.filter(function (r) { return r.phase === tblFilter; });
+      if (!d.length) { document.getElementById('tb').innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text3)">No rows in this phase</td></tr>'; return; }
+      var bm = { growth: '<span class="bdg g">Growth</span>', decline: '<span class="bdg a">Decline</span>' };
+      document.getElementById('tb').innerHTML = d.map(function (r) {
+        return '<tr class="ph' + r.phase[0] + '">'
+          + '<td><strong>' + r.year + '</strong></td><td>' + bm[r.phase] + '</td>'
+          + '<td class="cd">' + r.rate.toFixed(3) + '%</td>'
+          + '<td>' + fmtCr(r.monthly) + '</td><td>' + fmtCr(r.annual) + '</td>'
+          + '<td class="' + (r.interest < 0 ? 'cn' : '') + '">' + fmtCr(r.interest) + '</td>'
+          + '<td class="cp">' + fmtCr(r.corpus) + '</td>'
+          + '</tr>';
+      }).join('');
+    }
+
+    /* ---- summary update ---- */
+    function updateSummary(s) {
+      var setV = function (id, v) { var el = document.getElementById(id); if (el) { el.innerHTML = v; flash(id); } };
+      setV('sc-dur', s.duration + ' yrs'); document.getElementById('sc-until').textContent = 'Until ' + s.lastPosYear;
+      setV('sc-peak', fmtS(s.peakCorpus)); document.getElementById('sc-peak-yr').textContent = 'In ' + s.peakYear;
+      setV('sc-pension', fmtCr(s.finalMonthly)); document.getElementById('sc-pension-yr').textContent = 'In ' + s.lastPosYear;
+      setV('ps-g', s.growthYrs); setV('ps-d', s.declineYrs);
+      /* === EXHAUSTION BANNER === */
+      var banner = document.getElementById('exh-banner');
+      var ico = document.getElementById('exh-ico');
+      var title = document.getElementById('exh-title');
+      var yr = document.getElementById('exh-year');
+      var det = document.getElementById('exh-detail');
+      if (s.firstExhYr) {
+        banner.className = 'exh-banner danger';
+        ico.textContent = '⚠️';
+        title.textContent = '\u26a0\ufe0f Your money will last only until';
+        yr.textContent = s.firstExhYr;
+        det.textContent = 'After ' + s.duration + ' years of retirement, your corpus of ' + fmtS(s.peakCorpus) + ' will be fully exhausted. By ' + s.lastPosYear + ' you\'ll be drawing ' + fmtCr(s.finalMonthly) + '/month. Plan a backup income source before then.';
+      } else {
+        banner.className = 'exh-banner safe';
+        ico.textContent = '\u2705';
+        title.textContent = '\u2705 Great news \u2014 your corpus never runs out!';
+        yr.textContent = 'Never';
+        det.textContent = 'With current settings your ' + fmtS(s.peakCorpus) + ' peak corpus (in ' + s.peakYear + ') sustains ' + s.duration + ' years of retirement. Your money outlasts you!';
+      }
+      /* Header live pills */
+      var d = s.duration > 130 ? '130+' : s.duration; var pk = fmtS(s.peakCorpus); var ex = s.firstExhYr || 'Never';
+      document.getElementById('hh-dur').textContent = d;
+      document.getElementById('hh-peak').textContent = pk;
+      document.getElementById('hh-exh').textContent = ex;
+    }
+
+    /* ---- inputs config ---- */
+    var INPUTS = [
+      { key: 'year', fmt: function (v) { return String(Math.round(v)); } },
+      { key: 'corpus', fmt: function (v) { return fmtS(v); } },
+      { key: 'return', fmt: function (v) { return parseFloat(v).toFixed(2) + '%'; } },
+      { key: 'reduce', fmt: function (v) { return parseFloat(v).toFixed(2) + '%'; } },
+      { key: 'pension', fmt: function (v) { return fmtS(v); } },
+      { key: 'growth', fmt: function (v) { return parseFloat(v).toFixed(1) + '%'; } }
+    ];
+    var DEFS = { year: 2031, corpus: 20000000, 'return': 7, reduce: 0.25, pension: 50000, growth: 4 };
+
+    function getParams() {
+      return { retirementYear: +document.getElementById('in-year').value || 2031, initialCorpus: +document.getElementById('in-corpus').value || 20000000, returnRate: +document.getElementById('in-return').value || 7, returnReduce: +document.getElementById('in-reduce').value, initialMonthly: +document.getElementById('in-pension').value || 50000, pensionGrowth: +document.getElementById('in-growth').value || 4 };
+    }
+
+    function setInp(key, val) {
+      document.getElementById('in-' + key).value = val;
+      document.getElementById('sl-' + key).value = val;
+      var cfg = INPUTS.find(function (c) { return c.key === key; });
+      if (cfg) document.getElementById('dv-' + cfg.key).textContent = cfg.fmt(val);
+    }
+
+    function resetDef() {
+      selPlanIdx = -1;
+      document.querySelectorAll('.plan-card').forEach(function (c) { c.classList.remove('sel'); });
+      updatePlanTag(-1);
+      INPUTS.forEach(function (c) { var v = DEFS[c.key]; setInp(c.key, v); });
+      runSimulation();
+    }
+
+    /* ---- main runner ---- */
+    var dbt = null;
+    function runSimulation() {
+      var p = getParams();
+      var res = simulate(p);
+      simRows = res.rows;
+      updateSummary(res.sum);
+      renderChart(res.rows);
+      renderRows(res.rows);
+    }
+
+    function scrollToId(id) { var el = document.getElementById(id); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+
+    /* ---- wire inputs: LIVE UPDATE on every change ---- */
+    INPUTS.forEach(function (c) {
+      var inp = document.getElementById('in-' + c.key);
+      var sli = document.getElementById('sl-' + c.key);
+      function onChange() {
+        clearTimeout(dbt);
+        dbt = setTimeout(function () {
+          /* Deselect plan when user manually edits */
+          if (selPlanIdx >= 0) {
+            document.querySelectorAll('.plan-card').forEach(function (el) { el.classList.remove('sel'); });
+            selPlanIdx = -1;
+            updatePlanTag(-1);
+          }
+          runSimulation();
+        }, 80);
+      }
+      inp.addEventListener('input', function () {
+        var v = parseFloat(inp.value);
+        if (!isNaN(v)) { sli.value = v; document.getElementById('dv-' + c.key).textContent = c.fmt(v); onChange(); }
+      });
+      sli.addEventListener('input', function () {
+        var v = parseFloat(sli.value);
+        inp.value = v;
+        document.getElementById('dv-' + c.key).textContent = c.fmt(v);
+        onChange();
+      });
+    });
+
+    /* ---- init ---- */
+    window.addEventListener('DOMContentLoaded', function () {
+      INPUTS.forEach(function (c) {
+        var v = parseFloat(document.getElementById('in-' + c.key).value);
+        document.getElementById('dv-' + c.key).textContent = c.fmt(v);
+      });
+      renderPlanCards();
+      runSimulation();
+    });
+  </script>
+</body>
+
+</html>
