@@ -1128,6 +1128,167 @@
       color: var(--text);
     }
 
+    /* ===SAVE / SHARE BUTTONS=== */
+    .lp-actions {
+      display: flex;
+      gap: 6px;
+      margin-left: auto;
+    }
+
+    .lp-act-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(255,255,255,.05);
+      border: 1px solid var(--border);
+      color: var(--text2);
+      padding: 4px 10px;
+      border-radius: var(--rsm);
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--t);
+      font-family: inherit;
+      white-space: nowrap;
+    }
+
+    .lp-act-btn:hover { border-color: var(--accent); color: var(--text); background: rgba(124,58,237,.09); }
+    .lp-act-btn.save:hover { border-color: var(--green); color: var(--green); background: rgba(16,185,129,.08); }
+    .lp-act-btn.share:hover { border-color: #3b82f6; color: #93c5fd; background: rgba(59,130,246,.08); }
+
+    /* ===TOAST=== */
+    .toast {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: rgba(14,14,32,.97);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 10px 20px;
+      border-radius: 100px;
+      font-size: 13px;
+      font-weight: 600;
+      backdrop-filter: blur(16px);
+      z-index: 9999;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .25s ease, transform .25s ease;
+      white-space: nowrap;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+      pointer-events: auto;
+    }
+
+    /* ===MY PLANS STRIP=== */
+    .my-plans-strip {
+      margin-bottom: 16px;
+    }
+
+    .my-plans-strip.hidden { display: none; }
+
+    .mp-head {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .mp-head h2 { font-size: 14px; font-weight: 700; }
+    .mp-head p  { font-size: 11px; color: var(--text2); }
+    .mp-count {
+      font-size: 9px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 100px;
+      background: rgba(16,185,129,.12);
+      color: var(--green);
+      border: 1px solid var(--green-bdr);
+    }
+
+    .my-plans-scroll {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255,255,255,.07) transparent;
+    }
+
+    .my-plans-scroll::-webkit-scrollbar { height: 3px; }
+    .my-plans-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,.09); border-radius: 100px; }
+
+    .mp-card {
+      flex: 0 0 185px;
+      background: var(--card);
+      border: 1px solid var(--green-bdr);
+      border-radius: var(--r);
+      padding: 14px;
+      cursor: pointer;
+      scroll-snap-align: start;
+      transition: transform .2s ease, border-color .2s, box-shadow .2s;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .mp-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: var(--green);
+    }
+
+    .mp-card:hover {
+      border-color: var(--green);
+      transform: translateY(-3px);
+      box-shadow: 0 14px 36px rgba(0,0,0,.4);
+    }
+
+    .mp-card.sel { background: var(--card2); }
+
+    .mp-actions {
+      position: absolute;
+      top: 7px;
+      right: 7px;
+      display: flex;
+      gap: 3px;
+      opacity: 0;
+      transition: opacity .15s;
+    }
+
+    .mp-card:hover .mp-actions { opacity: 1; }
+
+    .mp-del, .mp-lnk {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      font-size: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background .15s;
+      font-family: inherit;
+      line-height: 1;
+      flex-shrink: 0;
+      border: 1px solid;
+    }
+
+    .mp-del { background: rgba(239,68,68,.12); border-color: rgba(239,68,68,.22); color: var(--red); }
+    .mp-del:hover { background: rgba(239,68,68,.28); }
+
+    .mp-lnk { background: rgba(59,130,246,.10); border-color: rgba(59,130,246,.22); color: #93c5fd; }
+    .mp-lnk:hover { background: rgba(59,130,246,.22); }
+
     /* ===RESPONSIVE=== */
     @media(max-width:960px) {
       .main-grid {
@@ -1235,6 +1396,18 @@
     </div>
   </section>
 
+  <!-- MY PLANS STRIP (dynamic) -->
+  <div class="wrap" id="my-plans-wrap">
+    <div class="my-plans-strip hidden" id="my-plans-strip">
+      <div class="mp-head">
+        <h2>My Saved Plans</h2>
+        <span class="mp-count" id="mp-count">0</span>
+        <p>Your custom scenarios &mdash; click to load, hover to delete</p>
+      </div>
+      <div class="my-plans-scroll" id="my-plans-container"></div>
+    </div>
+  </div>
+
   <!-- PLAN STRIP -->
   <div class="wrap" id="plan-strip">
     <div class="plan-strip">
@@ -1311,6 +1484,10 @@
         <div class="lp-footer">
           <div class="lp-fd" id="lp-dot"></div>
           <span class="lp-fn" id="lp-plan-text">Custom configuration</span>
+          <div class="lp-actions">
+            <button class="lp-act-btn save" onclick="savePlan()" title="Save current plan">💾 Save</button>
+            <button class="lp-act-btn share" onclick="shareLink()" title="Copy shareable link">🔗 Share</button>
+          </div>
         </div>
       </aside>
 
@@ -1429,6 +1606,9 @@
         target="_blank" rel="noopener">View Original Sheet</a></p>
     <p style="margin-top:4px">For educational purposes only &mdash; not financial advice.</p>
   </footer>
+
+  <!-- Toast notification -->
+  <div class="toast" id="toast"></div>
   <script>
     'use strict';
     var INR = '\u20b9';
@@ -1494,6 +1674,7 @@
       document.querySelectorAll('.plan-card').forEach(function (c, i) { c.classList.toggle('sel', i === idx); });
       updatePlanTag(idx);
       runSimulation();
+      setTimeout(function () { scrollToId('main-grid'); }, 80);
     }
 
     function updatePlanTag(idx) {
@@ -1635,6 +1816,195 @@
       runSimulation();
     }
 
+    /* ---- toast ---- */
+    var _toastTimer = null;
+    function showToast(msg, duration) {
+      var t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      clearTimeout(_toastTimer);
+      _toastTimer = setTimeout(function () { t.classList.remove('show'); }, duration || 2600);
+    }
+
+    /* ---- saved plans (localStorage) ---- */
+    var LS_KEY = 'retireWise_savedPlans';
+
+    function getSavedPlans() {
+      try { return JSON.parse(localStorage.getItem(LS_KEY) || '[]'); } catch (e) { return []; }
+    }
+
+    function putSavedPlans(arr) {
+      try { localStorage.setItem(LS_KEY, JSON.stringify(arr)); } catch (e) { }
+    }
+
+    /* ---- creative plan name generator ---- */
+    function generatePlanName(p) {
+      var c = p.initialCorpus, m = p.initialMonthly, r = p.returnRate, yr = p.retirementYear;
+      var dateTag = ' \u00b7 ' + new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+      /* Easter-egg tiers */
+      if (c >= 500000000)  return '\u0906\u0932\u0940\u0936\u093e\u0928 \u092d\u094d\u0930\u0937\u094d\u091f\u093e\u091a\u093e\u0930\u0940 \ud83c\udfd4\ufe0f' + dateTag;
+      if (m >= 1000000)    return 'The Maharaja Retiree \ud83d\udc51' + dateTag;
+      if (r >= 14)         return 'The Time Traveller \ud83d\ude80' + dateTag;
+      if (yr <= 2026)      return 'Already Sipping Chai \u2615' + dateTag;
+      if (c < 1000000 && m >= 50000) return 'The Eternal Optimist \ud83d\ude4f' + dateTag;
+      /* Corpus-based tiers */
+      var tier = c < 2000000 ? 0 : c < 10000000 ? 1 : c < 50000000 ? 2 : 3;
+      var pools = [
+        ['The Hopeful Builder \ud83c\udf31', 'Chai & Biscuit Fund \u2615', 'Simple Joys Seeker \ud83c\udf3c', 'The Patient Planner \ud83c\udf5b'],
+        ['Chai Pe Charcha Plan \u2615', 'The Steady Sailor \u26f5', 'Balanced & Happy \u2696\ufe0f', 'The Quiet Achiever \ud83c\udf43'],
+        ['The Smart Strategist \u265f\ufe0f', 'Golden Years Guru \u2728', 'Sunrise Portfolio \ud83c\udf05', 'The Comfortable Wanderer \ud83e\uddcd'],
+        ['The Wealth Architect \ud83c\udfd7\ufe0f', 'Legacy Builder \ud83c\udf3f', 'The Fortune Keeper \ud83d\udcb0', 'Peak Performer Plan \ud83d\udcc8']
+      ];
+      var hash = (Math.round(c / 100000) + Math.round(m / 1000) + Math.round(r * 7)) % 4;
+      return pools[tier][hash] + dateTag;
+    }
+
+    function savePlan() {
+      var suggested = generatePlanName(getParams());
+      var name = prompt('Name this plan:', suggested);
+      if (!name || !name.trim()) return;
+      var p = getParams();
+      var plan = {
+        name: name.trim(),
+        year: p.retirementYear,
+        corpus: p.initialCorpus,
+        returnRate: p.returnRate,
+        returnReduce: p.returnReduce,
+        pension: p.initialMonthly,
+        pensionGrowth: p.pensionGrowth,
+        savedAt: Date.now()
+      };
+      var arr = getSavedPlans();
+      arr.unshift(plan);
+      putSavedPlans(arr);
+      renderMyPlans();
+      showToast('✅ Plan \u201c' + plan.name + '\u201d saved!');
+    }
+
+    function deleteSavedPlan(idx, ev) {
+      ev.stopPropagation();
+      var arr = getSavedPlans();
+      var name = arr[idx].name;
+      arr.splice(idx, 1);
+      putSavedPlans(arr);
+      renderMyPlans();
+      showToast('🗑 \u201c' + name + '\u201d removed');
+    }
+
+    function applyMyPlan(idx) {
+      var arr = getSavedPlans();
+      var plan = arr[idx];
+      if (!plan) return;
+      /* deselect suggested plans */
+      selPlanIdx = -1;
+      document.querySelectorAll('.plan-card').forEach(function (c) { c.classList.remove('sel'); });
+      /* apply values */
+      setInp('year', plan.year);
+      setInp('corpus', plan.corpus);
+      setInp('return', plan.returnRate);
+      setInp('reduce', plan.returnReduce);
+      setInp('pension', plan.pension);
+      setInp('growth', plan.pensionGrowth);
+      /* mark selected my-plan card */
+      document.querySelectorAll('.mp-card').forEach(function (c, i) { c.classList.toggle('sel', i === idx); });
+      var dot = document.getElementById('lp-dot');
+      dot.style.background = 'var(--green)';
+      document.getElementById('lp-plan-text').textContent = plan.name + ' (saved)';
+      runSimulation();
+      setTimeout(function () { scrollToId('main-grid'); }, 80);
+    }
+
+    function renderMyPlans() {
+      var arr = getSavedPlans();
+      var strip = document.getElementById('my-plans-strip');
+      var cnt   = document.getElementById('mp-count');
+      var con   = document.getElementById('my-plans-container');
+      if (!arr.length) {
+        strip.classList.add('hidden');
+        return;
+      }
+      strip.classList.remove('hidden');
+      cnt.textContent = arr.length;
+      con.innerHTML = arr.map(function (plan, idx) {
+        var d = new Date(plan.savedAt);
+        var dateStr = d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+        return '<div class="mp-card" onclick="applyMyPlan(' + idx + ')" id="mpc-' + idx + '">'
+          + '<div class="mp-actions"><button class="mp-lnk" onclick="shareMyPlan(' + idx + ',event)" title="Copy link">🔗</button><button class="mp-del" onclick="deleteSavedPlan(' + idx + ',event)" title="Delete">✕</button></div>'
+          + '<div class="pc-name">' + plan.name + '</div>'
+          + '<div class="pc-tag">Saved on ' + dateStr + '</div>'
+          + '<hr class="pc-divider"/>'
+          + '<div class="pc-stats">'
+          + '<div class="pc-stat"><div class="pcs-val">' + fmtS(plan.corpus) + '</div><div class="pcs-lbl">Corpus</div></div>'
+          + '<div class="pc-stat"><div class="pcs-val">' + fmtCr(plan.pension) + '</div><div class="pcs-lbl">Monthly</div></div>'
+          + '<div class="pc-stat"><div class="pcs-val">' + plan.returnRate + '%</div><div class="pcs-lbl">Return</div></div>'
+          + '</div>'
+          + '<button class="pc-btn">Load Plan \u2192</button>'
+          + '</div>';
+      }).join('');
+    }
+
+    /* ---- share a specific saved plan ---- */
+    function shareMyPlan(idx, ev) {
+      ev.stopPropagation();
+      var arr = getSavedPlans();
+      var plan = arr[idx];
+      if (!plan) return;
+      var base = window.location.origin + window.location.pathname;
+      var params = new URLSearchParams({ year: plan.year, corpus: plan.corpus, ret: plan.returnRate, red: plan.returnReduce, pension: plan.pension, growth: plan.pensionGrowth });
+      var url = base + '?' + params.toString();
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(function () { showToast('🔗 Link for “' + plan.name + '” copied!'); }).catch(function () { fallbackCopy(url); });
+      } else { fallbackCopy(url); }
+    }
+
+    /* ---- share link ---- */
+    function shareLink() {
+      var p = getParams();
+      var base = window.location.origin + window.location.pathname;
+      var params = new URLSearchParams({
+        year: p.retirementYear,
+        corpus: p.initialCorpus,
+        ret: p.returnRate,
+        red: p.returnReduce,
+        pension: p.initialMonthly,
+        growth: p.pensionGrowth
+      });
+      var url = base + '?' + params.toString();
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(function () {
+          showToast('🔗 Link copied to clipboard!');
+        }).catch(function () { fallbackCopy(url); });
+      } else {
+        fallbackCopy(url);
+      }
+    }
+
+    function fallbackCopy(text) {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); showToast('🔗 Link copied to clipboard!'); }
+      catch (e) { showToast('\u26a0\ufe0f Could not copy — open console for URL'); console.log('Share URL:', text); }
+      document.body.removeChild(ta);
+    }
+
+    /* ---- load from URL params ---- */
+    function loadFromUrl() {
+      var sp = new URLSearchParams(window.location.search);
+      if (!sp.has('year') && !sp.has('corpus')) return false;
+      var map = { year: 'year', corpus: 'corpus', ret: 'return', red: 'reduce', pension: 'pension', growth: 'growth' };
+      Object.keys(map).forEach(function (k) {
+        if (sp.has(k)) setInp(map[k], parseFloat(sp.get(k)));
+      });
+      selPlanIdx = -1;
+      document.getElementById('lp-plan-text').textContent = 'Shared plan loaded';
+      document.getElementById('lp-dot').style.background = '#3b82f6';
+      showToast('\uD83D\uDD17 Shared plan loaded from link!', 3500);
+      return true;
+    }
+
     /* ---- main runner ---- */
     var dbt = null;
     function runSimulation() {
@@ -1683,6 +2053,8 @@
         document.getElementById('dv-' + c.key).textContent = c.fmt(v);
       });
       renderPlanCards();
+      renderMyPlans();
+      var loadedFromUrl = loadFromUrl();
       runSimulation();
     });
   </script>
